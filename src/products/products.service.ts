@@ -4,12 +4,14 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
+import { PaginationDTO } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
 export class ProductsService {
@@ -28,12 +30,19 @@ export class ProductsService {
     }
   }
 
-  async findAll() {
-    return await this.productRespository.find();
+  async findAll(paginationDTO: PaginationDTO) {
+    const { limit = 10, offset = 0 } = paginationDTO;
+    return await this.productRespository.find({
+      take: limit,
+      skip: offset,
+      //TODO: relaciones
+    });
   }
 
-  findOne(id: string) {
-    return this.productRespository.findOneBy({ id });
+  async findOne(id: string) {
+    const product = await this.productRespository.findOneBy({ id });
+    if (!product) throw new NotFoundException(`Product whit ${id} not found`);
+    return product;
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {
@@ -49,8 +58,8 @@ export class ProductsService {
   }
 
   private handleDBExeptions(error: any) {
+    // eslint-disable-next-line no-constant-condition
     if ((error.code = '23505')) throw new BadRequestException(error.detail);
-
     this.logger.error(error);
     throw new InternalServerErrorException(
       'Unexpected error, check server logs',
