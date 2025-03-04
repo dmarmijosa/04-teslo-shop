@@ -45,14 +45,33 @@ export class ProductsService {
     if (isUUID(term)) {
       product = await this.productRespository.findOneBy({ id: term });
     } else {
-      product = await this.productRespository.findOneBy({ slug: term });
+      //product = await this.productRespository.findOneBy({ slug: term });
+      const queryBuilder = this.productRespository.createQueryBuilder();
+      product = await queryBuilder
+        .where(`LOWER(title) = LOWER(:title) or LOWER(slug) = LOWER(:slug)`, {
+          title: term.toLowerCase(),
+          slug: term.toLowerCase(),
+        })
+        .getOne();
     }
     if (!product) throw new NotFoundException(`Product whit ${term} not found`);
     return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    const product = await this.productRespository.preload({
+      id: id,
+      ...updateProductDto,
+    });
+    if (!product)
+      throw new NotFoundException(`Product with id: ${id} not found `);
+
+    try {
+      await this.productRespository.save(product);
+      return product;
+    } catch (error) {
+      this.handleDBExeptions(error);
+    }
   }
 
   async remove(id: string) {
