@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   IsArray,
   IsIn,
@@ -38,6 +37,11 @@ export class CreateProductDto {
   @IsString({ each: true })
   @IsArray()
   sizes: string[];
+
+  @IsString({ each: true })
+  @IsArray()
+  @IsOptional()
+  tags: string[];
 
   @IsIn(['men', 'women', 'kid', 'unisex'])
   gender: string;
