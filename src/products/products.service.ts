@@ -9,7 +9,7 @@ import {
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Product, ProductImage } from './entities';
 import { PaginationDTO } from 'src/common/dtos/pagination.dto';
 import { validate as isUUID } from 'uuid';
@@ -22,6 +22,7 @@ export class ProductsService {
     private readonly productRespository: Repository<Product>,
     @InjectRepository(ProductImage)
     private readonly productImageRepository: Repository<ProductImage>,
+    private readonly dataSource: DataSource,
   ) {}
   async create(createProductDto: CreateProductDto) {
     try {
@@ -75,18 +76,31 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-    const product = await this.productRespository.preload({
-      id: id,
-      ...updateProductDto,
-      images: [],
-    });
+    const { images, ...toUppdate } = updateProductDto;
+    const product = await this.productRespository.preload({ id, ...toUppdate });
+    //Create queryRunner
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     if (!product)
       throw new NotFoundException(`Product with id: ${id} not found `);
 
     try {
-      await this.productRespository.save(product);
-      return product;
+      if (images) {
+        await queryRunner.manager.delete(ProductImage, { product: { id } });
+        product.images = images.map((image) =>
+          this.productImageRepository.create({ url: image }),
+        );
+      }
+      await queryRunner.manager.save(product);
+      //await this.productRespository.save(product);
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      return this.findOnePlain(id);
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
       this.handleDBExeptions(error);
     }
   }
@@ -105,6 +119,16 @@ export class ProductsService {
       ...rest,
       images: images.map((image) => image.url),
     };
+  }
+
+  async deleteAllProducts() {
+    const query = this.productRespository.createQueryBuilder('product');
+
+    try {
+      return await query.delete().where({}).execute();
+    } catch (error) {
+      this.handleDBExeptions(error);
+    }
   }
 
   private handleDBExeptions(error: any) {
