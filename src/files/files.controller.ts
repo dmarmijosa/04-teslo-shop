@@ -13,10 +13,14 @@ import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileFilter, fileNamer } from './helpers';
 import { diskStorage } from 'multer';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(
+    private readonly filesService: FilesService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('product')
   @UseInterceptors(
@@ -32,8 +36,7 @@ export class FilesController {
   uploadProductImage(@UploadedFile() file: Express.Multer.File) {
     if (!file)
       throw new BadRequestException('Make sure that the file is an image');
-    const secureURL = `${file.filename}`;
-    return { secureURL };
+    return `${this.configService.get<string>('HOST_API')}/files/product/${file.filename}`;
   }
   @Get('product/:imageName')
   findProductImage(
