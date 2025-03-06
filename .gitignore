@@ -61,3 +61,6 @@ postgres
 #static files
 static/products/*.*
 static/uploads/*.*
+
+#public files deb
+public/products/*.*
