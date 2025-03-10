@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   BadRequestException,
@@ -16,7 +14,7 @@ import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { JwtPayload } from './interfaces';
 
 @Injectable()
 export class AuthService {
