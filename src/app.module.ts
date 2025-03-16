@@ -17,7 +17,7 @@ import { MessagesWsModule } from './messages-ws/messages-ws.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL,
+      url: process.env.DATABASE_PUBLIC_URL,
       ssl: { rejectUnauthorized: false },
       autoLoadEntities: true,
       synchronize: true,
