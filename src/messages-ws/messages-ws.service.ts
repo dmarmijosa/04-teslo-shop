@@ -33,7 +33,6 @@ export class MessagesWsService {
     delete this.connectedClients[ClientId];
   }
   getConnectedClientes(): string[] {
-    console.log(this.connectedClients);
     return Object.keys(this.connectedClients);
   }
   getUserFullNameBySocketId(socketId: string) {
