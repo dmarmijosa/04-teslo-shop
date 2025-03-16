@@ -18,6 +18,7 @@ export class MessagesWsGateway
   constructor(private readonly messagesWsService: MessagesWsService) {}
 
   handleConnection(client: Socket) {
+    console.log(client.handshake.headers.authentication);
     this.messagesWsService.registerClient(client);
     this.wss.emit(
       'clients-updated',
@@ -35,6 +36,18 @@ export class MessagesWsGateway
 
   @SubscribeMessage('message-from-client')
   OnMessageFromClient(cliente: Socket, payload: NewMessageDto) {
-    console.log(cliente.id, payload);
+    /**cliente.emit('message-from-server', {
+      fullName: 'YO',
+      message: payload.message || 'no message !!',
+    });**/
+    // cliente.broadcast.emit('message-from-server', {
+    //   fullName: 'YO',
+    //   message: payload.message || 'no message !!',
+    // });
+
+    this.wss.emit('message-from-server', {
+      fullName: 'YO',
+      message: payload.message || 'no message !!',
+    });
   }
 }
