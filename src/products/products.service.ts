@@ -43,18 +43,29 @@ export class ProductsService {
   }
 
   async findAll(paginationDTO: PaginationDTO) {
-    const { limit = 10, offset = 0 } = paginationDTO;
+    const { limit = 10, offset = 0, gender = '' } = paginationDTO;
     const products = await this.productRespository.find({
       take: limit,
       skip: offset,
       relations: {
         images: true,
       },
+      order: {
+        id: 'ASC',
+      },
+      where: gender ? [{ gender }, { gender: 'unisex' }] : {},
     });
-    return products.map((product) => ({
-      ...product,
-      images: product.images ? product.images.map((img) => img.url) : [],
-    }));
+    const totalProducts = await this.productRespository.count({
+      where: gender ? [{ gender }, { gender: 'unisex' }] : {},
+    });
+    return {
+      count: totalProducts,
+      pages: Math.ceil(totalProducts / limit),
+      products: products.map((product) => ({
+        ...product,
+        images: product.images ? product.images.map((img) => img.url) : [],
+      })),
+    };
   }
 
   async findOne(term: string) {
