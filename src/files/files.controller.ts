@@ -1,22 +1,24 @@
 import {
-  BadRequestException,
   Controller,
   Get,
-  Param,
   Post,
-  Res,
+  Param,
   UploadedFile,
   UseInterceptors,
+  BadRequestException,
+  Res,
 } from '@nestjs/common';
-import { FilesService } from './files.service';
-import { Response } from 'express';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { fileFilter, fileNamer } from './helpers';
-import { diskStorage } from 'multer';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 
-@ApiTags('Files Get and Upload')
+import { Response } from 'express';
+import { diskStorage } from 'multer';
+import { FilesService } from './files.service';
+
+import { fileFilter, fileNamer } from './helpers';
+
+@ApiTags('Files - Get and Upload')
 @Controller('files')
 export class FilesController {
   constructor(
@@ -24,11 +26,21 @@ export class FilesController {
     private readonly configService: ConfigService,
   ) {}
 
+  @Get('product/:imageName')
+  findProductImage(
+    @Res() res: Response,
+    @Param('imageName') imageName: string,
+  ) {
+    const path = this.filesService.getStaticProductImage(imageName);
+
+    res.sendFile(path);
+  }
+
   @Post('product')
   @UseInterceptors(
     FileInterceptor('file', {
       fileFilter: fileFilter,
-      limits: { fieldSize: 2000 },
+      // limits: { fileSize: 1000 }
       storage: diskStorage({
         destination: './static/products',
         filename: fileNamer,
@@ -36,16 +48,15 @@ export class FilesController {
     }),
   )
   uploadProductImage(@UploadedFile() file: Express.Multer.File) {
-    if (!file)
+    if (!file) {
       throw new BadRequestException('Make sure that the file is an image');
-    return `${this.configService.get<string>('HOST_API')}/files/product/${file.filename}`;
-  }
-  @Get('product/:imageName')
-  findProductImage(
-    @Res() res: Response,
-    @Param('imageName') imageName: string,
-  ) {
-    const path = this.filesService.getStaticProductimage(imageName);
-    return res.sendFile(path);
+    }
+
+    // const secureUrl = `${ file.filename }`;
+    const secureUrl = `${this.configService.get('HOST_API')}/files/product/${
+      file.filename
+    }`;
+
+    return { secureUrl, fileName: file.filename };
   }
 }
