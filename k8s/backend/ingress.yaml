@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: teslo-api-ingress
+  namespace: teslo
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - teslo-api.danny.ddns-ip.net
+      secretName: teslo-api-tls
+  rules:
+    - host: teslo-api.danny.ddns-ip.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: teslo-api
+                port:
+                  number: 80

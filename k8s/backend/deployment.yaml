@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teslo-api
+  namespace: teslo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teslo-api
+  template:
+    metadata:
+      labels:
+        app: teslo-api
+    spec:
+      containers:
+        - name: teslo-api
+          image: ghcr.io/dmarmijosa/teslo-api:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: teslo-db-secret
+                  key: DB_PASSWORD
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: teslo-db-secret
+                  key: DB_USERNAME
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: teslo-db-secret
+                  key: DB_NAME
+            - name: SECRET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: teslo-db-secret
+                  key: SECRET_PASSWORD
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: teslo-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: teslo-config
+                  key: DB_PORT
+            - name: HOST_API
+              valueFrom:
+                configMapKeyRef:
+                  name: teslo-config
+                  key: HOST_API
