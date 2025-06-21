@@ -2,7 +2,8 @@
 /dist
 /node_modules
 /build
-
+!k8s/
+!k8s/**
 # Logs
 logs
 *.log
