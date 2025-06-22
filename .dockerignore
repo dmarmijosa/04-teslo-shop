@@ -1,0 +1,12 @@
+# Copiado desde tu .gitignore y añadido dist
+/dist
+/node_modules
+/build
+.env
+.DS_Store
+/coverage
+.vscode/*
+postgres
+static/products/*.*
+static/uploads/*.*
+public/products/*.*

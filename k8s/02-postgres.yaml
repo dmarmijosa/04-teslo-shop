@@ -1,0 +1,84 @@
+# 1. Solicitud de Almacenamiento Persistente
+# Le pide al clúster un volumen para guardar los datos de la base de datos de forma permanente.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: teslo-shop
+spec:
+  # ReadWriteOnce significa que el volumen solo puede ser montado por un pod a la vez.
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    # Solicita 5 Gigabytes de espacio. Puedes ajustar este valor.
+    requests:
+      storage: 5Gi
+  # Opcional: Si tu clúster tiene una clase de almacenamiento específica (ej: 'local-path', 'longhorn'),
+  # puedes especificarla aquí. Si no, usará la que esté por defecto.
+  # storageClassName: "your-storage-class"
+
+---
+
+# 2. Servicio Interno para la Base de Datos
+# Crea una dirección de red estable dentro del clúster para que el backend pueda encontrar a Postgres.
+apiVersion: v1
+kind: Service
+metadata:
+  # Este es el nombre que usará el backend como DB_HOST
+  name: teslo-postgres-svc
+  namespace: teslo-shop
+spec:
+  selector:
+    # Redirige el tráfico a cualquier pod con la etiqueta "app: teslo-postgres"
+    app: teslo-postgres
+  ports:
+    - protocol: TCP
+      port: 5432       # El puerto del servicio
+      targetPort: 5432 # El puerto del contenedor de Postgres
+
+---
+
+# 3. Despliegue de la Base de Datos
+# Define cómo se debe ejecutar el contenedor de Postgres.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teslo-postgres-deployment
+  namespace: teslo-shop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teslo-postgres
+  template:
+    metadata:
+      labels:
+        app: teslo-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14.3 # La misma versión que usabas en docker-compose
+        ports:
+        - containerPort: 5432
+        # Aquí definimos las variables de entorno para Postgres.
+        env:
+          # Estas son variables públicas, no necesitan ser secretos.
+          - name: POSTGRES_DB
+            value: "TesloDB"
+          - name: POSTGRES_USER
+            value: "postgres"
+          # Esta variable carga el valor desde el Secret que creamos antes.
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: teslo-db-secret # Nombre del Secret
+                key: DB_PASSWORD      # Clave dentro del Secret
+        # Monta el volumen persistente en la ruta donde Postgres guarda sus datos.
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          # Asocia este volumen con el PersistentVolumeClaim que definimos arriba.
+          claimName: postgres-pvc
