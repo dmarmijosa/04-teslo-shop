@@ -8,14 +8,14 @@ metadata:
 spec:
   # El tipo LoadBalancer solicita una IP pública a tu proveedor de nube o a tu clúster local (si está configurado).
   # En entornos de producción más avanzados, se suele usar un tipo ClusterIP y un Ingress Controller.
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     # Redirige el tráfico a cualquier pod con la etiqueta "app: teslo-backend".
     app: teslo-backend
   ports:
     - name: http
       protocol: TCP
-      port: 80 # Puerto público por el que se accederá al servicio.
+      port: 3000 # Puerto público por el que se accederá al servicio.
       targetPort: 3000 # Puerto del contenedor donde corre la app NestJS.
 
 ---
