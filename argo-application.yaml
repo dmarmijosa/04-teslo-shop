@@ -1,0 +1,40 @@
+# Este manifiesto define la aplicación para Argo CD.
+# Le indica a Argo CD que monitoree tu repositorio de Git y despliegue los manifiestos que encuentre.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # El nombre de tu aplicación en el dashboard de Argo CD.
+  name: teslo-shop
+  # Este manifiesto se debe aplicar en el namespace donde está instalado Argo CD.
+  namespace: argocd
+spec:
+  # 'default' es el proyecto por defecto en Argo CD.
+  project: default
+
+  # Configuración del origen: tu repositorio de Git.
+  source:
+    # ¡IMPORTANTE! Reemplaza esto con la URL de tu repositorio de Git.
+    repoURL: 'https://github.com/dmarmijosa/04-teslo-shop.git'
+    # La rama o tag que Argo CD debe observar. 'HEAD' usa la rama por defecto (ej. main o master).
+    targetRevision: prueba1
+    # La carpeta dentro de tu repositorio donde se encuentran los manifiestos de Kubernetes.
+    path: k8s
+
+  # Configuración del destino: tu clúster de Kubernetes.
+  destination:
+    # 'https://kubernetes.default.svc' es la dirección interna del API Server de Kubernetes.
+    # Generalmente no necesitas cambiar esto.
+    server: 'https://kubernetes.default.svc'
+    # El namespace donde se desplegarán todos los recursos de tu aplicación.
+    namespace: teslo-shop
+
+  # Política de sincronización: define cómo Argo CD aplica los cambios.
+  syncPolicy:
+    automated:
+      # Si borras un archivo de la carpeta k8s en Git, Argo CD borrará el recurso correspondiente del clúster.
+      prune: true
+      # Si alguien modifica un recurso directamente en el clúster, Argo CD lo revertirá al estado definido en Git.
+      selfHeal: true
+    syncOptions:
+      # Permite a Argo CD crear el namespace 'teslo-shop' si no existe.
+      - CreateNamespace=true
