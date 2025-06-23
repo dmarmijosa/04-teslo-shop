@@ -1,0 +1,49 @@
+# k8s/04-backend-ingress.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: teslo-backend-svc
+  namespace: teslo-shop
+spec:
+  # El tipo ClusterIP es para la comunicación interna del clúster. Es el correcto aquí.
+  type: ClusterIP 
+  selector:
+    app: teslo-backend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000       # El puerto del servicio
+      targetPort: 3000 # El puerto del contenedor donde corre la app NestJS
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: teslo-backend-ingress
+  namespace: teslo-shop
+  annotations:
+    # Usamos el mismo emisor de certificados que configuramos al principio
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: public
+  rules:
+  # REEMPLAZA ESTE DOMINIO CON EL TUYO
+  - host: "shop-dmarmijosa.duckdns.org" 
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: teslo-backend-svc
+            port:
+              number: 3000 # Debe coincidir con el puerto del servicio de arriba
+  tls:
+  # REEMPLAZA ESTE DOMINIO CON EL TUYO
+  - hosts:
+    - "shop-dmarmijosa.duckdns.org"
+    # Cert-manager creará un secreto con este nombre para guardar el certificado TLS
+    secretName: teslo-shop-tls-secret
