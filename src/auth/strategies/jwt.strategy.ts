@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { User } from '../entities/user.entity';
@@ -28,11 +29,15 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
     }
   }
   async validate(payload: JwtPayload): Promise<User> {
-    const { email } = payload;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const user = await this.userRepository.findOneBy({ email });
-    if (!user) throw new UnauthorizedException('Token invalid');
-    if (!user.isActive) throw new UnauthorizedException('User is inactive');
+    const { id } = payload;
+
+    const user = await this.userRepository.findOneBy({ id });
+
+    if (!user) throw new UnauthorizedException('Token not valid');
+
+    if (!user.isActive)
+      throw new UnauthorizedException('User is inactive, talk with an admin');
+
     return user;
   }
 }

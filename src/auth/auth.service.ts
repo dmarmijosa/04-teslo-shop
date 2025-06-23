@@ -33,7 +33,7 @@ export class AuthService {
       await this.userRepository.save(user);
       const { password: _, ...userWithoutPassword } = user;
       return {
-        ...userWithoutPassword,
+        user: { ...userWithoutPassword },
         token: this.getJwtToken({ id: user.id }),
       };
     } catch (error) {
@@ -41,24 +41,33 @@ export class AuthService {
     }
   }
 
-  async login(loginUser: LoginUserDto) {
-    try {
-      const { password, email } = loginUser;
-      const user = await this.userRepository.findOne({
-        where: { email },
-        select: { email: true, password: true, id: true },
-      });
+  async login(loginUserDto: LoginUserDto) {
+    const { password, email } = loginUserDto;
 
-      if (!user) throw new UnauthorizedException('Credentials are not valid');
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: {
+        email: true,
+        password: true,
+        id: true,
+        fullName: true,
+        isActive: true,
+        roles: true,
+      },
+    });
 
-      if (!password || !bcrypt.compareSync(password, user.password))
-        throw new UnauthorizedException('Credentials are not valid');
+    if (!user)
+      throw new UnauthorizedException('Credentials are not valid (email)');
 
-      return { ...user, token: this.getJwtToken({ id: user.id }) };
-    } catch (error) {
-      if (error instanceof UnauthorizedException) throw error;
-      this.handleErrorDB(error);
-    }
+    if (!bcrypt.compareSync(password, user.password))
+      throw new UnauthorizedException('Credentials are not valid (password)');
+
+    delete (user as Partial<User>).password;
+
+    return {
+      user: user,
+      token: this.getJwtToken({ id: user.id }),
+    };
   }
 
   private getJwtToken(payload: JwtPayload) {
@@ -72,6 +81,6 @@ export class AuthService {
   }
 
   checkAuthStatus(user: User) {
-    return { ...user, token: this.getJwtToken({ id: user.id }) };
+    return { user: { ...user }, token: this.getJwtToken({ id: user.id }) };
   }
 }

@@ -21,4 +21,11 @@ export class PaginationDTO {
   @Min(0)
   @IsOptional()
   offset: number;
+
+  @ApiProperty({
+    default: '',
+    description: 'Filter results by gender',
+  })
+  @IsOptional()
+  gender: 'men' | 'women' | 'unisex' | 'kid';
 }
