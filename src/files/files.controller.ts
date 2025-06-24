@@ -58,7 +58,8 @@ export class FilesController {
     @Res() res: Response,
     @Param('imageName') imageName: string,
   ) {
-    const path = this.filesService.getStaticProductImage(imageName);
+    // --- LÍNEA CORREGIDA ---
+    const path = this.filesService.getStaticProductimage(imageName); // 'i' minúscula
 
     res.sendFile(path);
   }
@@ -79,11 +80,10 @@ export class FilesController {
       throw new BadRequestException('Make sure that the file is an image');
     }
 
-    // const secureUrl = `${ file.filename }`;
     const secureUrl = `${this.configService.get('HOST_API')}/files/product/${
       file.filename
     }`;
 
-    return { secureUrl, fileName: file.filename };
+    return { secureUrl };
   }
 }
