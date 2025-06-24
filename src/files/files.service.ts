@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import AdmZip from 'adm-zip';
 import { existsSync, mkdirSync } from 'fs';
@@ -9,6 +12,7 @@ import { join } from 'path';
 
 @Injectable()
 export class FilesService {
+  private readonly logger = new Logger('FilesService');
   getStaticProductImage(imageName: string) {
     const path = join(__dirname, '../../static/products', imageName);
 
@@ -38,7 +42,11 @@ export class FilesService {
       const zip = new AdmZip(file.buffer);
       // Extraemos todo el contenido en la ruta de destino, sobreescribiendo si existen
       zip.extractAllTo(destinationPath, /*overwrite*/ true);
-    } catch (error) {
+    } catch (error: any) {
+      // --- BLOQUE MODIFICADO ---
+      // Logueamos el error original completo en la consola del pod
+      this.logger.error('Failed to unzip file', error.stack);
+      // Luego lanzamos la excepción genérica para el cliente
       throw new InternalServerErrorException(
         'Error al descomprimir el archivo .zip',
       );
