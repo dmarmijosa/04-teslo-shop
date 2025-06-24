@@ -9,9 +9,9 @@ import {
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
-// --- LÍNEA MODIFICADA ---
-// Cambiamos la forma de importar la librería para asegurar la compatibilidad
-import AdmZip from 'adm-zip';
+// --- ESTA ES LA LÍNEA CORRECTA Y DEFINITIVA ---
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AdmZip = require('adm-zip');
 
 @Injectable()
 export class FilesService {
