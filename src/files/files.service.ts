@@ -1,29 +1,28 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+// src/files/files.service.ts
+
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import AdmZip from 'adm-zip';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
+// --- LÍNEA MODIFICADA ---
+// Cambiamos la forma de importar la librería para asegurar la compatibilidad
+import AdmZip from 'adm-zip';
+
 @Injectable()
 export class FilesService {
-  constructor(
-    private readonly filesService: FilesService,
-    private readonly configService: ConfigService,
-  ) {}
   private readonly logger = new Logger('FilesService');
-  getStaticProductImage(imageName: string) {
+
+  getStaticProductimage(imageName: string) {
     const path = join(__dirname, '../../static/products', imageName);
-
     if (!existsSync(path))
-      throw new BadRequestException(`No product found with image ${imageName}`);
-
+      throw new BadRequestException(
+        `Not product found with image ${imageName}`,
+      );
     return path;
   }
 
@@ -34,24 +33,17 @@ export class FilesService {
       );
     }
 
-    // Ruta de destino dentro del contenedor, que está montada en nuestro Volumen Persistente
     const destinationPath = join(__dirname, '../../static/products');
 
-    // Asegurarse de que el directorio de destino existe
     if (!existsSync(destinationPath)) {
       mkdirSync(destinationPath, { recursive: true });
     }
 
     try {
-      // Usamos el buffer del archivo en memoria para crear el zip
       const zip = new AdmZip(file.buffer);
-      // Extraemos todo el contenido en la ruta de destino, sobreescribiendo si existen
       zip.extractAllTo(destinationPath, /*overwrite*/ true);
-    } catch (error: any) {
-      // --- BLOQUE MODIFICADO ---
-      // Logueamos el error original completo en la consola del pod
+    } catch (error) {
       this.logger.error('Failed to unzip file', error.stack);
-      // Luego lanzamos la excepción genérica para el cliente
       throw new InternalServerErrorException(
         'Error al descomprimir el archivo .zip',
       );
