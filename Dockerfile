@@ -17,7 +17,7 @@ RUN npm run build
 FROM base AS release
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-
+COPY ./public ./public
 # Puerto que expone la aplicación (definido en src/main.ts)
 EXPOSE 3000
 
