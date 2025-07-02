@@ -42,7 +42,7 @@ metadata:
 spec:
   ingressClassName: public
   rules:
-  - host: "shop-dmarmijosa.duckdns.org"
+  - host: "teslo-shop.dmarmijosa.com"
     http:
       paths:
       - path: /
@@ -54,5 +54,5 @@ spec:
               number: 3000
   tls:
   - hosts:
-    - "shop-dmarmijosa.duckdns.org"
+    - "teslo-shop.dmarmijosa.com"
     secretName: teslo-shop-tls-secret
