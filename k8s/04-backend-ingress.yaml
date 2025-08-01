@@ -6,7 +6,7 @@ metadata:
   name: teslo-backend-svc
   namespace: teslo-shop
 spec:
-  type: ClusterIP 
+  type: NodePort 
   selector:
     app: teslo-backend
   ports:
